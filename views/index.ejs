@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat App</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+  
+    // Function to join a room
+    function joinRoom() {
+      const username = document.getElementById("username").value.trim();
+      const room = document.getElementById("room").value.trim();
+  
+      if (!username || !room) {
+        alert("Username and Room are required!");
+        return;
+      }
+  
+      // Emit 'joinRoom' event
+      socket.emit("joinRoom", { username, room });
+  
+      // Show the chat UI
+      document.getElementById("welcome").innerHTML = `Welcome to <b>${room}</b>!`;
+      document.getElementById("chat").style.display = "block";
+      document.getElementById("login").style.display = "none";
+    }
+  
+    // Listen for incoming messages
+    socket.on("message", (data) => {
+      const messageArea = document.getElementById("messages");
+  
+      // Create the message element
+      const messageDiv = document.createElement("div");
+      const username = data.username || "";
+      const text = data.text || "";
+      const time = data.time || "";
+  
+      // Display message
+      messageDiv.className = "message";
+      messageDiv.innerHTML = `<b>${username}:</b> ${text} <span class="time">${time}</span>`;
+      messageArea.appendChild(messageDiv);
+  
+      // Scroll to the latest message
+      messageArea.scrollTop = messageArea.scrollHeight;
+    });
+  
+    // Listen for room user updates
+    socket.on("roomUsers", ({ users }) => {
+      const usersDiv = document.getElementById("users");
+      usersDiv.innerHTML = users.length > 0
+        ? users.map((u) => `<span>${u.username}</span>`).join(", ")
+        : "No users in this room";
+    });
+  
+    // Function to send a message
+    function sendMessage() {
+      const message = document.getElementById("message").value.trim();
+      if (message) {
+        socket.emit("chatMessage", message);
+        document.getElementById("message").value = ""; // Clear input after sending
+      } else {
+        alert("Message cannot be empty!");
+      }
+    }
+  </script>
+  
+</head>
+<body>
+  <!-- Login Section -->
+  <div id="login">
+    <h1>Join the Chat App</h1>
+    <input id="username" placeholder="Enter Username">
+    <input id="room" placeholder="Enter Room">
+    <button onclick="joinRoom()">Join</button>
+  </div>
+
+  <!-- Chat Section -->
+  <div id="chat" style="display: none;">
+    <h3 id="welcome"></h3>
+    <div id="messages" style="border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 10px;"></div>
+    <input id="message" placeholder="Type a message" style="width: 80%;">
+    <button onclick="sendMessage()">Send</button>
+
+    <h4>Users in Room:</h4>
+    <div id="users" style="border: 1px solid #ccc; padding: 10px;"></div>
+  </div>
+</body>
+</html>

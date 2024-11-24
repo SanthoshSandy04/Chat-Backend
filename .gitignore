@@ -1,0 +1,5 @@
+# compiled app
+dist
+
+# Dependency directories
+node_modules
