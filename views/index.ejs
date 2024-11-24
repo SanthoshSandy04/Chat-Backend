@@ -30,30 +30,40 @@
   
     // Listen for incoming messages
     socket.on("message", (data) => {
-      const messageArea = document.getElementById("messages");
+    const messageArea = document.getElementById("messages");
+    const messageDiv = document.createElement("div");
+
+    const username = data.username || "";
+    const text = data.text || "";
+    const time = data.time || "";
+    const type = data.type || "user"; // Default to 'user' message type
+
+    messageDiv.className = "message";
+
+    // Apply styling based on message type
+    if (type === "system") {
+      messageDiv.classList.add("system-message");
+      messageDiv.innerHTML = `<i>${text} ${time}</i>`;
+    } else if (type === "admin") {
+      messageDiv.classList.add("admin-message");
+      messageDiv.innerHTML = `<b>${username}</b>: ${text} <span class="time">${time}</span>`;
+    } else {
+      messageDiv.classList.add("user-message");
+      messageDiv.innerHTML = `<b>${username}</b>: ${text} <span class="time">${time}</span>`;
+    }
+
+    messageArea.appendChild(messageDiv);
+    messageArea.scrollTop = messageArea.scrollHeight;
+  });
   
-      // Create the message element
-      const messageDiv = document.createElement("div");
-      const username = data.username || "";
-      const text = data.text || "";
-      const time = data.time || "";
-  
-      // Display message
-      messageDiv.className = "message";
-      messageDiv.innerHTML = `<b>${username}:</b> ${text} <span class="time">${time}</span>`;
-      messageArea.appendChild(messageDiv);
-  
-      // Scroll to the latest message
-      messageArea.scrollTop = messageArea.scrollHeight;
-    });
-  
-    // Listen for room user updates
-    socket.on("roomUsers", ({ users }) => {
-      const usersDiv = document.getElementById("users");
-      usersDiv.innerHTML = users.length > 0
-        ? users.map((u) => `<span>${u.username}</span>`).join(", ")
-        : "No users in this room";
-    });
+// Listen for room user updates
+socket.on("roomUsers", ({ users }) => {
+  const usersDiv = document.getElementById("users");
+  usersDiv.innerHTML = users.length > 0
+    ? users.map((u) => `<span>${u.username}</span>`).join(", ")
+    : "No users in this room";
+});
+
   
     // Function to send a message
     function sendMessage() {
